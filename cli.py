@@ -1,6 +1,7 @@
 import argparse
 import json
 from jsondelta import compare
+from filtering import without_paths
 
 
 def main(argv=None):
@@ -8,10 +9,11 @@ def main(argv=None):
     parser.add_argument('before')
     parser.add_argument('after')
     parser.add_argument('--json', action='store_true', help='Machine-readable changes')
+    parser.add_argument('--ignore', action='append', default=[], help='Ignore JSON path (repeatable)')
     args = parser.parse_args(argv)
     with open(args.before, encoding='utf8') as stream: left = json.load(stream)
     with open(args.after, encoding='utf8') as stream: right = json.load(stream)
-    changes = compare(left,right)
+    changes = without_paths(compare(left,right),args.ignore)
     if args.json: print(json.dumps([{'path': p, 'kind': k, 'before': a, 'after': b} for p,k,a,b in changes],indent=2))
     else:
         for path,kind,old,new in changes:
